@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './LandingPage.css';
 import KPITracker from './KPITracker';
@@ -13,16 +13,7 @@ const LandingPage = () => {
   const [message, setMessage] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (token && refreshToken) {
-      setIsLoggedIn(true);
-      setupTokenRefresh();
-    }
-  }, []);
-
-  const setupTokenRefresh = () => {
+  const setupTokenRefresh = useCallback(() => {
     setInterval(async () => {
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
@@ -35,7 +26,16 @@ const LandingPage = () => {
         }
       }
     }, 14 * 60 * 1000); // Refresh every 14 minutes
-  };
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (token && refreshToken) {
+      setIsLoggedIn(true);
+      setupTokenRefresh();
+    }
+  }, [setupTokenRefresh]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
