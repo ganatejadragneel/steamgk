@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './LandingPage.css';
+import KPITracker from './KPITracker';
 
-const API_URL = 'http://localhost:4002/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002/api';
 
 const LandingPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -70,18 +71,13 @@ const LandingPage = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     setIsLoggedIn(false);
+    setUsername('');
+    setPassword('');
     setMessage('Logged out successfully');
   };
 
   if (isLoggedIn) {
-    return (
-      <div className="landing-page">
-        <div className="logged-in-container">
-          <h2>Welcome, {username}!</h2>
-          <button onClick={handleLogout}>Log Out</button>
-        </div>
-      </div>
-    );
+    return <KPITracker onLogout={handleLogout} />;
   }
 
   return (
