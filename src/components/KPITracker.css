@@ -27,7 +27,6 @@
   
   .logout-btn {
     position: absolute;
-    right: 20px; /* Position on the right */
     top: 50%;
     transform: translateY(-50%);
     background-color: #ff8c00; /* Orange button */
@@ -56,14 +55,19 @@
   .question {
     margin-bottom: 15px;
     display: flex;
-    align-items: center;
     justify-content: space-between;
+  }
+  
+  .question-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
   }
   
   .question p {
     font-weight: bold;
     margin: 0;
-    flex: 1;
   }
   
   .radio-group {
@@ -111,4 +115,46 @@
   
   .submit-btn:hover, .logout-btn:hover {
     opacity: 0.9;
+  }
+
+  .questions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    border: 1px solid #000;
+    border-bottom: none;
+  }
+  
+  .grid-row {
+    display: contents;
+  }
+  
+  .grid-row > * {
+    border-bottom: 1px solid #000;
+    padding: 10px;
+  }
+  
+  .activity-name,
+  .note,
+  .response {
+    display: flex;
+    align-items: center;
+  }
+  
+  .note-input {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .note-input::placeholder {
+    color: #999;
+  }
+  
+  .radio-group {
+    display: flex;
+    gap: 10px;
   }
