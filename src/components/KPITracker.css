@@ -37,6 +37,7 @@
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
+  transition: background-color 0.2s ease;
 }
 
 .content {
@@ -73,6 +74,11 @@
   display: grid;
   grid-template-columns: 1fr 1fr 2fr 2fr;
   border-bottom: 1px solid #ddd;
+  transition: background-color 0.2s ease;
+}
+
+.grid-row:hover {
+  background-color: #f8fafc;
 }
 
 .activity-name,
@@ -99,58 +105,124 @@
 
 .note-input {
   width: 100%;
-  padding: 8px;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.note-input:hover {
+  border-color: #93c5fd;
 }
 
 .note-input:focus {
   outline: none;
-  border-color: #1e90ff;
-  box-shadow: 0 0 0 2px rgba(30,144,255,0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
+
+/* Previous styles remain the same until radio-group styles */
 
 .radio-group {
   display: flex;
-  gap: 20px;
+  gap: 24px;
 }
 
 .radio-group label {
   display: flex;
   align-items: center;
   cursor: pointer;
-  gap: 6px;
+  user-select: none;
+  gap: 8px;
 }
 
 .radio-group input[type="radio"] {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #1e90ff;
-  border-radius: 50%;
-  appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
   outline: none;
   cursor: pointer;
   position: relative;
+  margin: 0;
+  transition: all 0.2s ease;
 }
 
-.radio-group input[type="radio"]:checked {
-  background-color: #1e90ff;
-  border-color: #1e90ff;
+/* Style for "Not Done" radio when checked */
+.radio-group input[value="not-done"]:checked {
+  background-color: #dc2626; /* Red color */
+  border-color: #dc2626;
 }
 
+/* Style for "Done" radio when checked */
+.radio-group input[value="done"]:checked {
+  background-color: #22c55e; /* Green color */
+  border-color: #22c55e;
+}
+
+/* Add a white dot in the center when checked */
 .radio-group input[type="radio"]:checked::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background-color: white;
   border-radius: 50%;
+}
+
+/* Hover states for both unchecked and checked */
+.radio-group input[value="not-done"]:hover {
+  border-color: #dc2626;
+}
+
+.radio-group input[value="done"]:hover {
+  border-color: #22c55e;
+}
+
+/* Focus states */
+.radio-group input[type="radio"]:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Text color for checked states */
+.radio-group label:has(input[value="not-done"]:checked) {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.radio-group label:has(input[value="done"]:checked) {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+/* Hover text colors */
+.radio-group label:hover input[value="not-done"] ~ span {
+  color: #dc2626;
+}
+
+.radio-group label:hover input[value="done"] ~ span {
+  color: #22c55e;
+}
+
+.radio-group label span {
+  font-size: 14px;
+  color: #4b5563;
+  transition: color 0.2s ease;
+}
+
+.radio-group label:hover span {
+  color: #3b82f6;
+}
+
+.response {
+  padding: 12px 20px;
 }
 
 .submit-btn {
@@ -163,12 +235,20 @@
   border: none;
   border-radius: 5px;
   font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .submit-btn:hover {
   background-color: #ff7800;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .logout-btn:hover {
@@ -176,6 +256,18 @@
 }
 
 /* Responsive adjustments */
+@media (max-width: 1024px) {
+  .content {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .grid-header,
+  .grid-row {
+    grid-template-columns: 1fr 1fr 1.5fr 1.5fr;
+  }
+}
+
 @media (max-width: 768px) {
   .grid-header,
   .grid-row {
@@ -190,5 +282,37 @@
   .content {
     padding-left: 10px;
     padding-right: 10px;
+  }
+
+  .note-input {
+    font-size: 13px;
+  }
+
+  .radio-group label span {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 20px;
+  }
+
+  .logout-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .header-cell {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .activity-name,
+  .activity-deadline,
+  .note,
+  .response {
+    padding: 10px;
+    font-size: 13px;
   }
 }
