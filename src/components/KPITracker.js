@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import './KPITracker.css';
@@ -30,6 +30,7 @@ const questions = [
 ];
 
 function CustomTabPanel(props) {
+
   const { children, value, index, ...other } = props;
   return (
     <div
@@ -63,13 +64,31 @@ const CustomTab = styled(Tab)(({ theme }) => ({
 }));
 
 const KPITracker = ({ onLogout }) => {
-  const [responses, setResponses] = useState({});
-  const [notes, setNotes] = useState({});
+  // Initialize responses with false for all questions
+  const initialResponses = {};
+  questions.forEach(q => {
+    initialResponses[q.id] = false;
+  });
+  
+  // Initialize empty notes for all questions
+  const initialNotes = {};
+  questions.forEach(q => {
+    initialNotes[q.id] = '';
+  });
+
+  const [responses, setResponses] = useState(initialResponses);
+  const [todayNotes, setTodayNotes] = useState(initialNotes);
   const [tabValue, setTabValue] = useState(0);
+  const [generalNote, setGeneralNote] = useState('');
 
   useEffect(() => {
-    fetchUserResponses();
-  }, []);
+    const loadInitialData = async () => {
+      await fetchUserResponses();
+      await fetchNotes();
+    };
+    
+    loadInitialData();
+  }, []); // Empty dependency array means this runs once when component mounts
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -88,9 +107,9 @@ const KPITracker = ({ onLogout }) => {
   };
 
   const handleNoteChange = (questionId, note) => {
-    setNotes(prev => ({
+    setTodayNotes(prev => ({
       ...prev,
-      [questionId]: note
+      [questionId]: note || '' // Ensure we never set undefined
     }));
   };
 
@@ -104,13 +123,76 @@ const KPITracker = ({ onLogout }) => {
   const handleSubmit = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/kpi/submit`, { responses }, {
+      const today = new Date().toISOString().split('T')[0];
+  
+      // First submit responses
+      await axios.post(
+        `${API_URL}/kpi/submit`, 
+        { responses }, 
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+  
+      // Prepare notes data including general note
+      const notesToSubmit = {
+        ...todayNotes,
+        '100': generalNote.trim()
+      };
+  
+      // Submit notes
+      await axios.post(
+        `${API_URL}/kpi/notes`,
+        {
+          date: today,
+          notes: notesToSubmit
+        },
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+  
+      // Fetch updated data after successful submission
+      await fetchNotes();
+      alert('Responses and notes submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting data:', error);
+      alert(error.response?.data?.message || 'Failed to submit data. Please try again.');
+    }
+  };
+
+  const fetchNotes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/kpi/notes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Responses submitted successfully!');
+      
+      console.log('Received notes:', res.data.notes); // Debug log
+      
+      const notesData = res.data.notes || {};
+      const today = new Date().toISOString().split('T')[0];
+      const todayData = notesData[today] || {};
+  
+      console.log('Today\'s notes:', todayData); // Debug log
+  
+      // Set today's notes in state
+      const updatedNotes = { ...initialNotes }; // Start with empty notes
+      Object.keys(todayData).forEach(questionId => {
+        if (questionId === '100') {
+          setGeneralNote(todayData[questionId] || '');
+        } else {
+          updatedNotes[questionId] = todayData[questionId] || '';
+        }
+      });
+  
+      setTodayNotes(updatedNotes);
+      console.log('Updated notes state:', updatedNotes); // Debug log
     } catch (error) {
-      console.error('Error submitting responses:', error);
-      alert(error.response?.data?.message || 'Failed to submit responses. Please try again.');
+      console.error('Error fetching notes:', error);
     }
   };
 
@@ -142,14 +224,14 @@ const KPITracker = ({ onLogout }) => {
                 <div className="activity-name">{question.text}</div>
                 <div className="activity-deadline">{question.deadline}</div>
                 <div className="note">
-                  <input
-                    type="text"
-                    className="note-input"
-                    placeholder="Notes"
-                    maxLength="100"
-                    value={notes[question.id] || ''}
-                    onChange={(e) => handleNoteChange(question.id, e.target.value)}
-                  />
+                <input
+                  type="text"
+                  className="note-input"
+                  placeholder="Notes"
+                  maxLength="100"
+                  value={todayNotes[question.id] || ''} // Ensure we never pass undefined
+                  onChange={(e) => handleNoteChange(question.id, e.target.value)}
+                />
                 </div>
                 <div className="response">
                   <div className="radio-group">
@@ -177,6 +259,17 @@ const KPITracker = ({ onLogout }) => {
                 </div>
               </div>
             ))}
+          </div>
+          <div className="general-notes-section">
+            <h3>General Notes</h3>
+            <textarea
+              className="general-notes"
+              placeholder="Enter your general notes here"
+              maxLength="500"
+              rows="4"
+              value={generalNote}
+              onChange={(e) => setGeneralNote(e.target.value)}
+            />
           </div>
           <button className="submit-btn" onClick={handleSubmit}>Submit</button>
         </CustomTabPanel>
