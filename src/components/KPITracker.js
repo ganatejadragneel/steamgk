@@ -30,7 +30,6 @@ const questions = [
 ];
 
 function CustomTabPanel(props) {
-
   const { children, value, index, ...other } = props;
   return (
     <div
@@ -64,13 +63,11 @@ const CustomTab = styled(Tab)(({ theme }) => ({
 }));
 
 const KPITracker = ({ onLogout }) => {
-  // Initialize responses with false for all questions
   const initialResponses = {};
   questions.forEach(q => {
     initialResponses[q.id] = false;
   });
   
-  // Initialize empty notes for all questions
   const initialNotes = {};
   questions.forEach(q => {
     initialNotes[q.id] = '';
@@ -78,8 +75,10 @@ const KPITracker = ({ onLogout }) => {
 
   const [responses, setResponses] = useState(initialResponses);
   const [todayNotes, setTodayNotes] = useState(initialNotes);
+  const [previousDayNotes, setPreviousDayNotes] = useState(initialNotes);
   const [tabValue, setTabValue] = useState(0);
   const [generalNote, setGeneralNote] = useState('');
+  const [previousGeneralNote, setPreviousGeneralNote] = useState('');
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -88,7 +87,7 @@ const KPITracker = ({ onLogout }) => {
     };
     
     loadInitialData();
-  }, []); // Empty dependency array means this runs once when component mounts
+  }, []);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -106,10 +105,16 @@ const KPITracker = ({ onLogout }) => {
     }
   };
 
+  const getPreviousDay = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split('T')[0];
+  };
+
   const handleNoteChange = (questionId, note) => {
     setTodayNotes(prev => ({
       ...prev,
-      [questionId]: note || '' // Ensure we never set undefined
+      [questionId]: note || ''
     }));
   };
 
@@ -125,7 +130,6 @@ const KPITracker = ({ onLogout }) => {
       const token = localStorage.getItem('token');
       const today = new Date().toISOString().split('T')[0];
   
-      // First submit responses
       await axios.post(
         `${API_URL}/kpi/submit`, 
         { responses }, 
@@ -134,13 +138,11 @@ const KPITracker = ({ onLogout }) => {
         }
       );
   
-      // Prepare notes data including general note
       const notesToSubmit = {
         ...todayNotes,
         '100': generalNote.trim()
       };
   
-      // Submit notes
       await axios.post(
         `${API_URL}/kpi/notes`,
         {
@@ -155,7 +157,6 @@ const KPITracker = ({ onLogout }) => {
         }
       );
   
-      // Fetch updated data after successful submission
       await fetchNotes();
       alert('Responses and notes submitted successfully!');
     } catch (error) {
@@ -171,16 +172,13 @@ const KPITracker = ({ onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('Received notes:', res.data.notes); // Debug log
-      
       const notesData = res.data.notes || {};
       const today = new Date().toISOString().split('T')[0];
+      const previousDay = getPreviousDay();
+      
+      // Handle today's notes
       const todayData = notesData[today] || {};
-  
-      console.log('Today\'s notes:', todayData); // Debug log
-  
-      // Set today's notes in state
-      const updatedNotes = { ...initialNotes }; // Start with empty notes
+      const updatedNotes = { ...initialNotes };
       Object.keys(todayData).forEach(questionId => {
         if (questionId === '100') {
           setGeneralNote(todayData[questionId] || '');
@@ -188,9 +186,19 @@ const KPITracker = ({ onLogout }) => {
           updatedNotes[questionId] = todayData[questionId] || '';
         }
       });
-  
       setTodayNotes(updatedNotes);
-      console.log('Updated notes state:', updatedNotes); // Debug log
+
+      // Handle previous day's notes for placeholders
+      const previousData = notesData[previousDay] || {};
+      const previousNotes = { ...initialNotes };
+      Object.keys(previousData).forEach(questionId => {
+        if (questionId === '100') {
+          setPreviousGeneralNote(previousData[questionId] || '');
+        } else {
+          previousNotes[questionId] = previousData[questionId] || '';
+        }
+      });
+      setPreviousDayNotes(previousNotes);
     } catch (error) {
       console.error('Error fetching notes:', error);
     }
@@ -224,14 +232,14 @@ const KPITracker = ({ onLogout }) => {
                 <div className="activity-name">{question.text}</div>
                 <div className="activity-deadline">{question.deadline}</div>
                 <div className="note">
-                <input
-                  type="text"
-                  className="note-input"
-                  placeholder="Notes"
-                  maxLength="100"
-                  value={todayNotes[question.id] || ''} // Ensure we never pass undefined
-                  onChange={(e) => handleNoteChange(question.id, e.target.value)}
-                />
+                  <input
+                    type="text"
+                    className="note-input"
+                    placeholder={previousDayNotes[question.id] || "Notes"}
+                    maxLength="100"
+                    value={todayNotes[question.id] || ''}
+                    onChange={(e) => handleNoteChange(question.id, e.target.value)}
+                  />
                 </div>
                 <div className="response">
                   <div className="radio-group">
@@ -243,7 +251,7 @@ const KPITracker = ({ onLogout }) => {
                         checked={!responses[question.id]}
                         onChange={() => handleResponseChange(question.id, false)}
                       />
-                      Not Done
+                      <span>Not Done</span>
                     </label>
                     <label>
                       <input
@@ -253,7 +261,7 @@ const KPITracker = ({ onLogout }) => {
                         checked={responses[question.id]}
                         onChange={() => handleResponseChange(question.id, true)}
                       />
-                      Done
+                      <span>Done</span>
                     </label>
                   </div>
                 </div>
@@ -264,7 +272,7 @@ const KPITracker = ({ onLogout }) => {
             <h3>General Notes</h3>
             <textarea
               className="general-notes"
-              placeholder="Enter your general notes here"
+              placeholder={previousGeneralNote || "Enter your general notes here"}
               maxLength="500"
               rows="4"
               value={generalNote}
