@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import './KPITracker.css';
@@ -13,21 +13,27 @@ import Dashboard from './DashBoard';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002/api';
 
 const questions = [
-  { id: 1, text: "Run", deadline: "6pm" },
-  { id: 2, text: "Read", deadline: "10pm" },
-  { id: 3, text: "Gym", deadline: "10am" },
-  { id: 4, text: "Nutrition", deadline: "7pm" },
-  { id: 5, text: "Sleep 10:30p", deadline: "10:30pm" },
-  { id: 6, text: "Awake 6:30a", deadline: "7am" },
-  { id: 7, text: "Tulsi", deadline: "8pm" },
-  { id: 8, text: "Water", deadline: "8pm" },
-  { id: 9, text: "Work 8 hours", deadline: "--" },
-  { id: 10, text: "Amma Appa", deadline: "--" },
-  { id: 11, text: "Jabam M", deadline: "10am" },
-  { id: 12, text: "Jabam E", deadline: "8pm" },
-  { id: 13, text: "Skincare", deadline: "9pm" },
-  { id: 14, text: "Bath", deadline: "11am" }
+  { id: 1, text: 'Run', deadline: '6pm' },
+  { id: 2, text: 'Read', deadline: '10pm' },
+  { id: 3, text: 'Gym', deadline: '10am' },
+  { id: 4, text: 'Nutrition', deadline: '7pm' },
+  { id: 5, text: 'Sleep 10:30p', deadline: '10:30pm' },
+  { id: 6, text: 'Awake 6:30a', deadline: '7am' },
+  { id: 7, text: 'Tulsi', deadline: '8pm' },
+  { id: 8, text: 'Water', deadline: '8pm' },
+  { id: 9, text: 'Work 8 hours', deadline: '--' },
+  { id: 10, text: 'Amma Appa', deadline: '--' },
+  { id: 11, text: 'Jabam M', deadline: '10am' },
+  { id: 12, text: 'Jabam E', deadline: '8pm' },
+  { id: 13, text: 'Skincare', deadline: '9pm' },
+  { id: 14, text: 'Bath', deadline: '11am' },
 ];
+
+// Define `initialNotes` BEFORE usage
+const initialNotes = questions.reduce((acc, q) => {
+  acc[q.id] = '';
+  return acc;
+}, {});
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -63,14 +69,10 @@ const CustomTab = styled(Tab)(({ theme }) => ({
 }));
 
 const KPITracker = ({ onLogout }) => {
+  // Initialize responses with false for all questions
   const initialResponses = {};
-  questions.forEach(q => {
+  questions.forEach((q) => {
     initialResponses[q.id] = false;
-  });
-  
-  const initialNotes = {};
-  questions.forEach(q => {
-    initialNotes[q.id] = '';
   });
 
   const [responses, setResponses] = useState(initialResponses);
@@ -80,106 +82,39 @@ const KPITracker = ({ onLogout }) => {
   const [generalNote, setGeneralNote] = useState('');
   const [previousGeneralNote, setPreviousGeneralNote] = useState('');
 
-  useEffect(() => {
-    const loadInitialData = async () => {
-      await fetchUserResponses();
-      await fetchNotes();
-    };
-    
-    loadInitialData();
+  const getPreviousDay = useCallback(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split('T')[0];
   }, []);
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
-
-  const fetchUserResponses = async () => {
+  const fetchUserResponses = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/kpi/responses`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setResponses(res.data.responses);
     } catch (error) {
       console.error('Error fetching responses:', error);
     }
-  };
+  }, []);
 
-  const getPreviousDay = () => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    return date.toISOString().split('T')[0];
-  };
-
-  const handleNoteChange = (questionId, note) => {
-    setTodayNotes(prev => ({
-      ...prev,
-      [questionId]: note || ''
-    }));
-  };
-
-  const handleResponseChange = (questionId, isDone) => {
-    setResponses(prev => ({
-      ...prev,
-      [questionId]: isDone
-    }));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const today = new Date().toISOString().split('T')[0];
-  
-      await axios.post(
-        `${API_URL}/kpi/submit`, 
-        { responses }, 
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-  
-      const notesToSubmit = {
-        ...todayNotes,
-        '100': generalNote.trim()
-      };
-  
-      await axios.post(
-        `${API_URL}/kpi/notes`,
-        {
-          date: today,
-          notes: notesToSubmit
-        },
-        {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-  
-      await fetchNotes();
-      alert('Responses and notes submitted successfully!');
-    } catch (error) {
-      console.error('Error submitting data:', error);
-      alert(error.response?.data?.message || 'Failed to submit data. Please try again.');
-    }
-  };
-
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/kpi/notes`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       const notesData = res.data.notes || {};
       const today = new Date().toISOString().split('T')[0];
       const previousDay = getPreviousDay();
-      
+
       // Handle today's notes
       const todayData = notesData[today] || {};
       const updatedNotes = { ...initialNotes };
-      Object.keys(todayData).forEach(questionId => {
+      Object.keys(todayData).forEach((questionId) => {
         if (questionId === '100') {
           setGeneralNote(todayData[questionId] || '');
         } else {
@@ -191,7 +126,7 @@ const KPITracker = ({ onLogout }) => {
       // Handle previous day's notes for placeholders
       const previousData = notesData[previousDay] || {};
       const previousNotes = { ...initialNotes };
-      Object.keys(previousData).forEach(questionId => {
+      Object.keys(previousData).forEach((questionId) => {
         if (questionId === '100') {
           setPreviousGeneralNote(previousData[questionId] || '');
         } else {
@@ -202,18 +137,90 @@ const KPITracker = ({ onLogout }) => {
     } catch (error) {
       console.error('Error fetching notes:', error);
     }
+  }, [getPreviousDay /* initialNotes no longer needed here */]);
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      await fetchUserResponses();
+      await fetchNotes();
+    };
+
+    loadInitialData();
+  }, [fetchUserResponses, fetchNotes]);
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  const handleNoteChange = (questionId, note) => {
+    setTodayNotes((prev) => ({
+      ...prev,
+      [questionId]: note || '',
+    }));
+  };
+
+  const handleResponseChange = (questionId, isDone) => {
+    setResponses((prev) => ({
+      ...prev,
+      [questionId]: isDone,
+    }));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const today = new Date().toISOString().split('T')[0];
+
+      await axios.post(
+        `${API_URL}/kpi/submit`,
+        { responses },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const notesToSubmit = {
+        ...todayNotes,
+        '100': generalNote.trim(),
+      };
+
+      await axios.post(
+        `${API_URL}/kpi/notes`,
+        {
+          date: today,
+          notes: notesToSubmit,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      await fetchNotes();
+      alert('Responses and notes submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting data:', error);
+      alert(
+        error.response?.data?.message ||
+          'Failed to submit data. Please try again.'
+      );
+    }
   };
 
   return (
     <div className="kpi-tracker">
       <div className="taskbar">
         <h1 className="title">KPI Tracker</h1>
-        <button className="logout-btn" onClick={onLogout}>Log Out</button>
+        <button className="logout-btn" onClick={onLogout}>
+          Log Out
+        </button>
       </div>
       <div className="content">
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
           <Box sx={{ width: '100%', borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example">
+            <Tabs value={tabValue} onChange={handleTabChange}>
               <CustomTab icon={<TableChartIcon />} {...a11yProps(0)} />
               <CustomTab icon={<DashboardIcon />} {...a11yProps(1)} />
             </Tabs>
@@ -227,7 +234,7 @@ const KPITracker = ({ onLogout }) => {
               <div className="header-cell">Notes</div>
               <div className="header-cell">Status</div>
             </div>
-            {questions.map(question => (
+            {questions.map((question) => (
               <div key={question.id} className="grid-row">
                 <div className="activity-name">{question.text}</div>
                 <div className="activity-deadline">{question.deadline}</div>
@@ -235,7 +242,7 @@ const KPITracker = ({ onLogout }) => {
                   <input
                     type="text"
                     className="note-input"
-                    placeholder={previousDayNotes[question.id] || "Notes"}
+                    placeholder={previousDayNotes[question.id] || 'Notes'}
                     maxLength="100"
                     value={todayNotes[question.id] || ''}
                     onChange={(e) => handleNoteChange(question.id, e.target.value)}
@@ -272,14 +279,16 @@ const KPITracker = ({ onLogout }) => {
             <h3>General Notes</h3>
             <textarea
               className="general-notes"
-              placeholder={previousGeneralNote || "Enter your general notes here"}
+              placeholder={previousGeneralNote || 'Enter your general notes here'}
               maxLength="500"
               rows="4"
               value={generalNote}
               onChange={(e) => setGeneralNote(e.target.value)}
             />
           </div>
-          <button className="submit-btn" onClick={handleSubmit}>Submit</button>
+          <button className="submit-btn" onClick={handleSubmit}>
+            Submit
+          </button>
         </CustomTabPanel>
         <CustomTabPanel value={tabValue} index={1}>
           <Dashboard />
