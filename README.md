@@ -1,71 +1,134 @@
-# Getting Started with Create React App
+# Steam Game Key Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React-based frontend application for managing Steam game keys.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Technologies Used](#technologies-used)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Running the Application](#running-the-application)
+- [Project Structure](#project-structure)
+- [Available Scripts](#available-scripts)
+- [Connecting to the Backend](#connecting-to-the-backend)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+
+## Overview
+
+This frontend application provides a user interface for the Steam Game Key Management System. It allows users to view, add, and manage Steam game keys through an intuitive web interface.
+
+## Technologies Used
+
+- React 18.3.1
+- React DOM 18.3.1
+- React Scripts 5.0.1
+- CSS for styling
+- Jest and React Testing Library for testing
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v16.x or later recommended)
+- npm or yarn package manager
+
+### Installation
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/steamgk-frontend.git
+   cd steamgk-frontend
+   ```
+
+2. Install dependencies
+   ```bash
+   npm install
+   # or if you use yarn
+   yarn install
+   ```
+
+### Running the Application
+
+Start the development server:
+```bash
+npm start
+# or
+yarn start
+```
+
+This will run the app in development mode. Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+## Project Structure
+
+```
+steamgk-frontend/
+├── public/
+│   └── index.html
+├── src/
+│   ├── components/
+│   │   ├── LandingPage.js
+│   │   └── LandingPage.css
+│   ├── App.js
+│   ├── index.js
+│   └── index.css
+├── package.json
+└── README.md
+```
+
+Key components:
+- **LandingPage**: The initial landing page for the application
+- **App**: The root component that renders the LandingPage
 
 ## Available Scripts
 
-In the project directory, you can run:
+- `npm start`: Runs the app in development mode
+- `npm test`: Launches the test runner in interactive watch mode
+- `npm run build`: Builds the app for production to the `build` folder
+- `npm run eject`: Ejects from create-react-app configuration (one-way operation)
 
-### `npm start`
+## Connecting to the Backend
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+To connect this frontend to the backend API:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. Create a `.env` file in the root directory
+2. Add the backend API URL:
+   ```
+   REACT_APP_API_URL=http://localhost:5000/api
+   ```
+   Replace the URL with your actual backend URL.
 
-### `npm test`
+3. Use this environment variable in your API calls:
+   ```javascript
+   const apiUrl = process.env.REACT_APP_API_URL;
+   fetch(`${apiUrl}/endpoint`)
+     .then(response => response.json())
+     .then(data => console.log(data));
+   ```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Deployment
 
-### `npm run build`
+To build the app for production:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm run build
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+This creates a `build` directory with production-ready files that can be deployed to any static hosting service.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Deployment Options
 
-### `npm run eject`
+- **Netlify**: Connect your GitHub repository or upload the build folder
+- **Vercel**: Connect your GitHub repository for automatic deployments
+- **GitHub Pages**: Deploy using the gh-pages package
+- **AWS S3**: Upload the build folder to an S3 bucket configured for static website hosting
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Contributing
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-# steamgk
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add some amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
